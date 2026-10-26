@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <title>XenonAI v0.1.0</title>
+  <title>XenonAI v0.2.0</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="highlight-dark.css">
 </head>
@@ -12,7 +12,7 @@
     <!-- Backdrop Scrim -->
     <div id="sidebarScrim" class="xl-sidebar-scrim" hidden></div>
 
-    <!-- Sidebar History with Search -->
+    <!-- Sidebar Drawer with Real-Time History Search -->
     <aside id="sidebar" class="xl-sidebar" hidden>
       <div class="xl-sidebar-header">
         <div class="d-flex align-items-center gap-2">
@@ -62,7 +62,7 @@
         <div id="messages" class="xl-chat-messages">
           <div class="xl-welcome">
             <div class="xl-badges-container">
-              <span class="xl-welcome-badge brand">XenonAI</span>
+              <span class="xl-welcome-badge brand">XenonAI v0.2.0</span>
               <span class="xl-welcome-badge edge">Edge Intelligence</span>
               <span class="xl-welcome-badge secure">100% Offline / Private</span>
             </div>
@@ -91,7 +91,7 @@
       <!-- 2. Models Tab -->
       <section id="view-models" class="xl-view">
         <div class="xl-scroll-content">
-          <div class="xl-model-card" style="border-style: dashed; background: rgba(37, 99, 235, 0.04); margin-bottom: 12px;">
+          <div class="xl-model-card custom-import-card">
             <div class="xl-model-header">
               <div>
                 <div class="xl-model-title">Custom GGUF Model</div>
@@ -103,19 +103,20 @@
             </button>
           </div>
 
-          <div class="xl-search-wrap" style="padding: 0 0 8px 0;">
+          <div class="xl-search-wrap" style="padding: 0 0 10px 0;">
             <input id="modelSearch" type="text" placeholder="Search models by name or tag..." class="xl-search-input">
           </div>
 
           <div class="xl-category-bar">
+            <button class="xl-cat-chip" data-category="downloaded">💾 Downloaded</button>
             <button class="xl-cat-chip active" data-category="general">General</button>
             <button class="xl-cat-chip" data-category="reasoning">Reasoning</button>
             <button class="xl-cat-chip" data-category="coding">Coding</button>
             <button class="xl-cat-chip" data-category="unfiltered">Unfiltered</button>
           </div>
 
-          <div class="d-flex justify-content-between align-items-center" style="margin: 12px 2px 10px 2px;">
-            <span id="categoryLabel" style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">General Models</span>
+          <div class="d-flex justify-content-between align-items-center" style="margin: 14px 2px 12px 2px;">
+            <span id="categoryLabel" style="font-size: 12.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">General Models</span>
             <span id="activeModelTag" class="xl-pill highlight">Active: None</span>
           </div>
 
@@ -301,24 +302,58 @@
           <div class="d-flex align-items-center gap-2 mt-3">
             <button id="save" class="btn btn-primary w-100">Save Configuration</button>
           </div>
-          
+
           <!-- App Info & Auto Update -->
-          <div class="xl-settings-group" style="text-align: center;">
-            <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">XenonAI Edge</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin: 3px 0 10px 0;">
-              Version <span id="appVersionDisplay" style="color: var(--accent-cyan); font-family: var(--font-mono); font-weight: 600;">v0.1.0</span> (Build 100)
+          <div class="xl-settings-group" style="text-align: center; margin-top: 18px;">
+            <div style="font-weight: 700; font-size: 16px; color: var(--text-primary);">XenonAI Edge</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin: 4px 0 14px 0;">
+              Version <span id="appVersionDisplay" style="color: var(--accent-cyan); font-family: var(--font-mono); font-weight: 600;">v0.2.0</span> (Build 200)
             </div>
             <button id="btnCheckUpdate" type="button" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center gap-2">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
               <span>Check for Updates</span>
             </button>
-            <div id="updateStatusMsg" style="font-size: 11.5px; margin-top: 8px; color: var(--text-muted);"></div>
+            <div id="updateStatusMsg" style="font-size: 12px; margin-top: 10px; color: var(--text-muted);"></div>
           </div>
 
-          <div id="savedMsg" style="text-align: center; color: var(--accent-emerald); font-size: 12px; margin-top: 8px;"></div>
+          <div id="savedMsg" style="text-align: center; color: var(--accent-emerald); font-size: 13px; margin-top: 10px;"></div>
         </div>
       </section>
-    
+
+      <!-- Floating Bottom Nav Dock (v0.2.0) -->
+      <nav class="xl-floating-dock">
+        <button class="xl-dock-item active" data-tab="chat">
+          <div class="xl-dock-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <span>Chat</span>
+        </button>
+
+        <button class="xl-dock-item" data-tab="models">
+          <div class="xl-dock-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <span>Models</span>
+        </button>
+
+        <button class="xl-dock-item" data-tab="settings">
+          <div class="xl-dock-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </div>
+          <span>Settings</span>
+        </button>
+      </nav>
+    </main>
+
     <!-- Update Alert Modal -->
     <div id="updateModal" class="xl-modal-scrim" hidden>
       <div class="xl-modal-card">
@@ -326,7 +361,7 @@
           <span class="xl-logo-glow"></span>
           <strong style="font-size: 16px;">Update Available!</strong>
         </div>
-        <p style="font-size: 13px; color: var(--text-secondary); margin: 6px 0 12px 0;">
+        <p style="font-size: 13.5px; color: var(--text-secondary); margin: 6px 0 12px 0;">
           A newer version <strong id="newVerTag" style="color: var(--accent-cyan);">v0.2.0</strong> is ready for installation.
         </p>
         <div id="updateChangelog" class="xl-changelog-box"></div>
@@ -336,35 +371,6 @@
         </div>
       </div>
     </div>
-
-    </main>
-
-    <!-- Bottom Navigation Bar -->
-    <nav class="xl-bottom-nav">
-      <button class="xl-nav-tab active" data-tab="chat">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-        <span>Chat</span>
-      </button>
-
-      <button class="xl-nav-tab" data-tab="models">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-          <line x1="12" y1="22.08" x2="12" y2="12"></line>
-        </svg>
-        <span>Models</span>
-      </button>
-
-      <button class="xl-nav-tab" data-tab="settings">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-        <span>Settings</span>
-      </button>
-    </nav>
   </div>
 
   <script src="marked.min.js"></script>

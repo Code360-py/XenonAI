@@ -33,16 +33,11 @@ public class MainActivity extends Activity {
     private static String sLibStatus = "OK";
 
     static {
-        try {
-            System.loadLibrary("c++_shared");
-            System.loadLibrary("ggml-base");
-            System.loadLibrary("ggml-cpu");
-            System.loadLibrary("ggml");
-            System.loadLibrary("llama");
-            System.loadLibrary("xenonai");
-            System.loadLibrary("xenonai_jni");
-        } catch (Throwable t) {
-            sLibStatus = "LibErr: " + t.getMessage();
+        String[] libs = {"c++_shared", "ggml-base", "ggml-cpu", "ggml", "llama", "xenonai_jni", "xenonai"};
+        for (String lib : libs) {
+            try {
+                System.loadLibrary(lib);
+            } catch (Throwable ignored) {}
         }
     }
 
@@ -245,7 +240,7 @@ public class MainActivity extends Activity {
             try {
                 return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
             } catch (Exception e) {
-                return "0.1.0";
+                return "0.2.0";
             }
         }
 
@@ -254,7 +249,7 @@ public class MainActivity extends Activity {
             try {
                 return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
             } catch (Exception e) {
-                return 100;
+                return 200;
             }
         }
 
@@ -264,9 +259,7 @@ public class MainActivity extends Activity {
                 Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
-            } catch (Exception e) {
-                // ignore
-            }
+            } catch (Exception ignored) {}
         }
 
         @JavascriptInterface
@@ -294,21 +287,41 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public String loadModelDetailed(String fullPath) {
-            if (!sLibStatus.equals("OK")) return sLibStatus;
-            File f = new File(fullPath);
+        public String loadModelDetailed(final String fullPath) {
+            final File f = new File(fullPath);
             if (!f.exists()) return "Err: File not found (" + f.getAbsolutePath() + ")";
 
-            try {
-                int res = nativeInit(f.getAbsolutePath());
-                if (res == 0) {
-                    AppState.activeModel = f.getName();
-                    return "OK";
-                } else {
-                    return "NativeInitErr (code " + res + "): " + nativeGetLastError();
+            final int[] result = new int[]{-1};
+            final String[] errorMsg = new String[]{""};
+
+            // Allocate a dedicated thread with 8MB stack for native initialization
+            Thread initThread = new Thread(null, new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        result[0] = nativeInit(f.getAbsolutePath());
+                        if (result[0] != 0) {
+                            errorMsg[0] = nativeGetLastError();
+                        }
+                    } catch (Throwable t) {
+                        result[0] = -99;
+                        errorMsg[0] = t.getMessage();
+                    }
                 }
-            } catch (Throwable t) {
-                return "Err: " + t.getMessage();
+            }, "XenonInitThread", 8 * 1024 * 1024);
+
+            initThread.start();
+            try {
+                initThread.join();
+            } catch (InterruptedException e) {
+                return "Err: Thread interrupted";
+            }
+
+            if (result[0] == 0) {
+                AppState.activeModel = f.getName();
+                return "OK";
+            } else {
+                return "NativeInitErr (code " + result[0] + "): " + errorMsg[0];
             }
         }
 
@@ -329,7 +342,9 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void stopGeneration() {
-            nativeStop();
+            try {
+                nativeStop();
+            } catch (Throwable ignored) {}
         }
 
         @JavascriptInterface

@@ -345,18 +345,18 @@
     function switchTab(name) {
         currentTab = name;
         document.querySelectorAll(".xl-view").forEach(v => v.classList.remove("active"));
-        document.querySelectorAll(".xl-nav-tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".xl-dock-item").forEach(t => t.classList.remove("active"));
 
         const targetView = document.getElementById("view-" + name);
         if (targetView) targetView.classList.add("active");
 
-        const targetTab = document.querySelector(`.xl-nav-tab[data-tab="${name}"]`);
+        const targetTab = document.querySelector(`.xl-dock-item[data-tab="${name}"]`);
         if (targetTab) targetTab.classList.add("active");
 
         if (name === "models") renderModels();
     }
 
-    document.querySelectorAll(".xl-nav-tab").forEach(tab => {
+    document.querySelectorAll(".xl-dock-item").forEach(tab => {
         tab.onclick = function() { switchTab(this.getAttribute("data-tab")); };
     });
 
@@ -490,7 +490,7 @@
                 localStorage.removeItem(STORAGE_SETTINGS);
                 
     // --- In-App Auto Update Checker ---
-    const CURRENT_VERSION = window.Xenon && Xenon.getAppVersion ? Xenon.getAppVersion() : "0.1.0";
+    const CURRENT_VERSION = window.Xenon && Xenon.getAppVersion ? Xenon.getAppVersion() : "0.2.0";
     // Replace with your GitHub user/repo when publishing:
     const GITHUB_REPO = "LingeshM/XenonAI";
     const RELEASES_API = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
@@ -586,6 +586,7 @@
         elModelList.innerHTML = "";
 
         const categoryTitles = {
+            downloaded: "Downloaded & Local Models",
             general: "General Purpose",
             reasoning: "Reasoning & STEM",
             coding: "Coding & Software",
@@ -597,7 +598,47 @@
             elActiveModelTag.textContent = activeModelName ? activeModelName.replace(".gguf", "") : "Active: None";
         }
 
-        let models = MODEL_CATALOG[activeCategory] || [];
+        let models = [];
+        if (activeCategory === "downloaded") {
+            // Aggregate all downloaded models across all categories
+            const allModels = [
+                ...MODEL_CATALOG.general,
+                ...MODEL_CATALOG.reasoning,
+                ...MODEL_CATALOG.coding,
+                ...MODEL_CATALOG.unfiltered
+            ];
+            
+            // Deduplicate by filename
+            const seen = new Set();
+            allModels.forEach(m => {
+                if (!seen.has(m.filename)) {
+                    seen.add(m.filename);
+                    if (Xenon.isModelDownloaded && Xenon.isModelDownloaded(m.filename)) {
+                        models.push(m);
+                    }
+                }
+            });
+
+            // Include custom imported model if present on disk
+            if (Xenon.isModelDownloaded && Xenon.isModelDownloaded("custom_model.gguf")) {
+                models.unshift({
+                    name: "Custom Imported GGUF",
+                    filename: "custom_model.gguf",
+                    quant: "Local",
+                    sizeMb: "Custom",
+                    ram: "Dynamic",
+                    desc: "Locally loaded model file from external storage.",
+                    url: ""
+                });
+            }
+
+            // Put active running model first
+            if (activeModelName) {
+                models.sort((a, b) => (a.filename === activeModelName ? -1 : (b.filename === activeModelName ? 1 : 0)));
+            }
+        } else {
+            models = MODEL_CATALOG[activeCategory] || [];
+        }
         if (modelSearchQuery) {
             models = models.filter(m => 
                 m.name.toLowerCase().includes(modelSearchQuery) ||
@@ -612,7 +653,18 @@
         }
 
         if (models.length === 0) {
-            elModelList.innerHTML = `<div class="p-4 text-center text-muted small">No models matching "${modelSearchQuery}"</div>`;
+            if (activeCategory === "downloaded") {
+                elModelList.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+                        <div style="font-size: 2.2rem; margin-bottom: 10px;">💾</div>
+                        <h4 style="color: var(--text-primary); font-size: 15px; margin-bottom: 6px;">No Models Downloaded Yet</h4>
+                        <p style="font-size: 12.5px; line-height: 1.5; max-width: 280px; margin: 0 auto 16px auto;">
+                            Select a model from the General, Reasoning, Coding, or Unfiltered tabs, or tap "Browse Local File" above.
+                        </p>
+                    </div>`;
+            } else {
+                elModelList.innerHTML = `<div class="p-4 text-center text-muted small">No models matching "${modelSearchQuery}"</div>`;
+            }
             return;
         }
 
@@ -1028,7 +1080,7 @@
     // Boot
     
     // --- In-App Auto Update Checker ---
-    const CURRENT_VERSION = window.Xenon && Xenon.getAppVersion ? Xenon.getAppVersion() : "0.1.0";
+    const CURRENT_VERSION = window.Xenon && Xenon.getAppVersion ? Xenon.getAppVersion() : "0.2.0";
     // Replace with your GitHub user/repo when publishing:
     const GITHUB_REPO = "LingeshM/XenonAI";
     const RELEASES_API = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
