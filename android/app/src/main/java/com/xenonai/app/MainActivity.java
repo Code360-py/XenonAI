@@ -19,12 +19,15 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Locale;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class MainActivity extends Activity {
@@ -235,6 +238,87 @@ public class MainActivity extends Activity {
     }
 
     public class XenonBridge {
+
+        @JavascriptInterface
+        public String checkUpdateAvailable() {
+            BufferedReader reader = null;
+            HttpURLConnection conn = null;
+            try {
+                String targetUrl = "https://api.github.com/repos/Code360-py/XenonAI/releases/latest";
+                URL url = new URL(targetUrl);
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setConnectTimeout(8000);
+                conn.setReadTimeout(8000);
+                conn.setRequestProperty("User-Agent", "XenonAI-Android");
+                conn.setRequestProperty("Accept", "application/vnd.github.v3+json");
+
+                int code = conn.getResponseCode();
+                if (code != 200) {
+                    return "{\"success\": false, \"error\": \"HTTP error " + code + "\"}";
+                }
+
+                reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                JSONObject release = new JSONObject(sb.toString());
+                String latestTag = release.optString("tag_name", "");
+                String changelog = release.optString("body", "Bug fixes and improvements.");
+                String htmlUrl = release.optString("html_url", "");
+
+                String apkUrl = htmlUrl;
+                JSONArray assets = release.optJSONArray("assets");
+                if (assets != null) {
+                    for (int i = 0; i < assets.length(); i++) {
+                        JSONObject asset = assets.getJSONObject(i);
+                        String name = asset.optString("name", "");
+                        if (name.endsWith(".apk")) {
+                            apkUrl = asset.optString("browser_download_url", htmlUrl);
+                            break;
+                        }
+                    }
+                }
+
+                String currentVer = getAppVersion();
+                boolean updateAvailable = isRemoteVersionGreater(latestTag, currentVer);
+
+                JSONObject out = new JSONObject();
+                out.put("success", true);
+                out.put("updateAvailable", updateAvailable);
+                out.put("currentVersion", currentVer);
+                out.put("latestVersion", latestTag);
+                out.put("changelog", changelog);
+                out.put("downloadUrl", apkUrl);
+                return out.toString();
+
+            } catch (Throwable t) {
+                String msg = t.getMessage() != null ? t.getMessage().replace('"', '\'') : "unknown error";
+                return "{\"success\": false, \"error\": \"" + msg + "\"}";
+            } finally {
+                if (reader != null) { try { reader.close(); } catch (Exception ignored) {} }
+                if (conn != null) conn.disconnect();
+            }
+        }
+
+        private boolean isRemoteVersionGreater(String remote, String current) {
+            String r = remote.replaceAll("[^0-9.]", "");
+            String c = current.replaceAll("[^0-9.]", "");
+            String[] rParts = r.split("\\.");
+            String[] cParts = c.split("\\.");
+            int max = Math.max(rParts.length, cParts.length);
+            for (int i = 0; i < max; i++) {
+                int rVal = i < rParts.length && !rParts[i].isEmpty() ? Integer.parseInt(rParts[i]) : 0;
+                int cVal = i < cParts.length && !cParts[i].isEmpty() ? Integer.parseInt(cParts[i]) : 0;
+                if (rVal > cVal) return true;
+                if (rVal < cVal) return false;
+            }
+            return false;
+        }
+
         @JavascriptInterface
         public String getAppVersion() {
             try {
@@ -294,7 +378,6 @@ public class MainActivity extends Activity {
             final int[] result = new int[]{-1};
             final String[] errorMsg = new String[]{""};
 
-            // Allocate a dedicated thread with 8MB stack for native initialization
             Thread initThread = new Thread(null, new Runnable() {
                 @Override
                 public void run() {

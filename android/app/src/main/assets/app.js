@@ -522,32 +522,31 @@
         return 0;
     }
 
-    async function checkForUpdates(manual = false) {
+        async function checkForUpdates(manual = false) {
         if (elUpdateStatusMsg && manual) elUpdateStatusMsg.textContent = "Checking for new releases...";
+        
         try {
-            const res = await fetch(RELEASES_API, { cache: "no-cache" });
-            if (!res.ok) {
-                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "No update releases found on repository.";
-                return;
-            }
-            const data = await res.json();
-            const latestTag = data.tag_name || "";
-            
-            // If latest version is greater than installed version
-            if (latestTag && compareVersions(latestTag, CURRENT_VERSION) > 0) {
-                // Find .apk asset in release
-                const apkAsset = (data.assets || []).find(a => a.name.endsWith(".apk"));
-                pendingDownloadUrl = apkAsset ? apkAsset.browser_download_url : data.html_url;
-
-                if (elNewVerTag) elNewVerTag.textContent = latestTag;
-                if (elUpdateChangelog) elUpdateChangelog.textContent = data.body || "Performance improvements and bug fixes.";
-                if (elUpdateModal) elUpdateModal.hidden = false;
-                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "";
+            if (window.Xenon && typeof Xenon.checkUpdateAvailable === "function") {
+                const res = JSON.parse(Xenon.checkUpdateAvailable());
+                if (!res.success) {
+                    if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Update check failed: " + res.error;
+                    return;
+                }
+                
+                if (res.updateAvailable) {
+                    pendingDownloadUrl = res.downloadUrl;
+                    if (elNewVerTag) elNewVerTag.textContent = res.latestVersion;
+                    if (elUpdateChangelog) elUpdateChangelog.textContent = res.changelog;
+                    if (elUpdateModal) elUpdateModal.hidden = false;
+                    if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "";
+                } else {
+                    if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "✓ You are on the latest version.";
+                }
             } else {
-                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "✓ You are on the latest version.";
+                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Xenon native bridge unavailable.";
             }
         } catch (err) {
-            if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Could not connect to update server.";
+            if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Error checking update: " + err.message;
         }
     }
 
@@ -1112,32 +1111,31 @@
         return 0;
     }
 
-    async function checkForUpdates(manual = false) {
+        async function checkForUpdates(manual = false) {
         if (elUpdateStatusMsg && manual) elUpdateStatusMsg.textContent = "Checking for new releases...";
+        
         try {
-            const res = await fetch(RELEASES_API, { cache: "no-cache" });
-            if (!res.ok) {
-                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "No update releases found on repository.";
-                return;
-            }
-            const data = await res.json();
-            const latestTag = data.tag_name || "";
-            
-            // If latest version is greater than installed version
-            if (latestTag && compareVersions(latestTag, CURRENT_VERSION) > 0) {
-                // Find .apk asset in release
-                const apkAsset = (data.assets || []).find(a => a.name.endsWith(".apk"));
-                pendingDownloadUrl = apkAsset ? apkAsset.browser_download_url : data.html_url;
-
-                if (elNewVerTag) elNewVerTag.textContent = latestTag;
-                if (elUpdateChangelog) elUpdateChangelog.textContent = data.body || "Performance improvements and bug fixes.";
-                if (elUpdateModal) elUpdateModal.hidden = false;
-                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "";
+            if (window.Xenon && typeof Xenon.checkUpdateAvailable === "function") {
+                const res = JSON.parse(Xenon.checkUpdateAvailable());
+                if (!res.success) {
+                    if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Update check failed: " + res.error;
+                    return;
+                }
+                
+                if (res.updateAvailable) {
+                    pendingDownloadUrl = res.downloadUrl;
+                    if (elNewVerTag) elNewVerTag.textContent = res.latestVersion;
+                    if (elUpdateChangelog) elUpdateChangelog.textContent = res.changelog;
+                    if (elUpdateModal) elUpdateModal.hidden = false;
+                    if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "";
+                } else {
+                    if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "✓ You are on the latest version.";
+                }
             } else {
-                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "✓ You are on the latest version.";
+                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Xenon native bridge unavailable.";
             }
         } catch (err) {
-            if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Could not connect to update server.";
+            if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Error checking update: " + err.message;
         }
     }
 
