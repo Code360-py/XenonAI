@@ -301,9 +301,42 @@
           <div class="d-flex align-items-center gap-2 mt-3">
             <button id="save" class="btn btn-primary w-100">Save Configuration</button>
           </div>
+          
+          <!-- App Info & Auto Update -->
+          <div class="xl-settings-group" style="text-align: center;">
+            <div style="font-weight: 700; font-size: 15px; color: var(--text-primary);">XenonAI Edge</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin: 3px 0 10px 0;">
+              Version <span id="appVersionDisplay" style="color: var(--accent-cyan); font-family: var(--font-mono); font-weight: 600;">v0.1.0</span> (Build 100)
+            </div>
+            <button id="btnCheckUpdate" type="button" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center gap-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              <span>Check for Updates</span>
+            </button>
+            <div id="updateStatusMsg" style="font-size: 11.5px; margin-top: 8px; color: var(--text-muted);"></div>
+          </div>
+
           <div id="savedMsg" style="text-align: center; color: var(--accent-emerald); font-size: 12px; margin-top: 8px;"></div>
         </div>
       </section>
+    
+    <!-- Update Alert Modal -->
+    <div id="updateModal" class="xl-modal-scrim" hidden>
+      <div class="xl-modal-card">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="xl-logo-glow"></span>
+          <strong style="font-size: 16px;">Update Available!</strong>
+        </div>
+        <p style="font-size: 13px; color: var(--text-secondary); margin: 6px 0 12px 0;">
+          A newer version <strong id="newVerTag" style="color: var(--accent-cyan);">v0.2.0</strong> is ready for installation.
+        </p>
+        <div id="updateChangelog" class="xl-changelog-box"></div>
+        <div class="d-flex gap-2 mt-3">
+          <button id="btnDismissUpdate" type="button" class="btn btn-secondary flex-fill">Later</button>
+          <button id="btnDownloadUpdate" type="button" class="btn btn-primary flex-fill">Download & Install</button>
+        </div>
+      </div>
+    </div>
+
     </main>
 
     <!-- Bottom Navigation Bar -->

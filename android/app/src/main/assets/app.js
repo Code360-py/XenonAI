@@ -488,7 +488,93 @@
         elBtnClearAppCache.onclick = () => {
             if (confirm("Reset local settings and active model state?")) {
                 localStorage.removeItem(STORAGE_SETTINGS);
-                loadSettings();
+                
+    // --- In-App Auto Update Checker ---
+    const CURRENT_VERSION = window.Xenon && Xenon.getAppVersion ? Xenon.getAppVersion() : "0.1.0";
+    // Replace with your GitHub user/repo when publishing:
+    const GITHUB_REPO = "LingeshM/XenonAI";
+    const RELEASES_API = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+
+    const elAppVersionDisplay = document.getElementById("appVersionDisplay");
+    const elBtnCheckUpdate = document.getElementById("btnCheckUpdate");
+    const elUpdateStatusMsg = document.getElementById("updateStatusMsg");
+    const elUpdateModal = document.getElementById("updateModal");
+    const elNewVerTag = document.getElementById("newVerTag");
+    const elUpdateChangelog = document.getElementById("updateChangelog");
+    const elBtnDismissUpdate = document.getElementById("btnDismissUpdate");
+    const elBtnDownloadUpdate = document.getElementById("btnDownloadUpdate");
+
+    let pendingDownloadUrl = "";
+
+    if (elAppVersionDisplay) {
+        elAppVersionDisplay.textContent = "v" + CURRENT_VERSION;
+    }
+
+    function compareVersions(v1, v2) {
+        const p1 = v1.replace(/^v/, "").split(".").map(Number);
+        const p2 = v2.replace(/^v/, "").split(".").map(Number);
+        for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+            const num1 = p1[i] || 0;
+            const num2 = p2[i] || 0;
+            if (num1 > num2) return 1;
+            if (num1 < num2) return -1;
+        }
+        return 0;
+    }
+
+    async function checkForUpdates(manual = false) {
+        if (elUpdateStatusMsg && manual) elUpdateStatusMsg.textContent = "Checking for new releases...";
+        try {
+            const res = await fetch(RELEASES_API, { cache: "no-cache" });
+            if (!res.ok) {
+                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "No update releases found on repository.";
+                return;
+            }
+            const data = await res.json();
+            const latestTag = data.tag_name || "";
+            
+            // If latest version is greater than installed version
+            if (latestTag && compareVersions(latestTag, CURRENT_VERSION) > 0) {
+                // Find .apk asset in release
+                const apkAsset = (data.assets || []).find(a => a.name.endsWith(".apk"));
+                pendingDownloadUrl = apkAsset ? apkAsset.browser_download_url : data.html_url;
+
+                if (elNewVerTag) elNewVerTag.textContent = latestTag;
+                if (elUpdateChangelog) elUpdateChangelog.textContent = data.body || "Performance improvements and bug fixes.";
+                if (elUpdateModal) elUpdateModal.hidden = false;
+                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "";
+            } else {
+                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "✓ You are on the latest version.";
+            }
+        } catch (err) {
+            if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Could not connect to update server.";
+        }
+    }
+
+    if (elBtnCheckUpdate) {
+        elBtnCheckUpdate.onclick = () => checkForUpdates(true);
+    }
+
+    if (elBtnDismissUpdate) {
+        elBtnDismissUpdate.onclick = () => { if (elUpdateModal) elUpdateModal.hidden = true; };
+    }
+
+    if (elBtnDownloadUpdate) {
+        elBtnDownloadUpdate.onclick = () => {
+            if (pendingDownloadUrl) {
+                if (window.Xenon && Xenon.openExternalUrl) {
+                    Xenon.openExternalUrl(pendingDownloadUrl);
+                } else {
+                    window.open(pendingDownloadUrl, "_blank");
+                }
+            }
+            if (elUpdateModal) elUpdateModal.hidden = true;
+        };
+    }
+
+    loadSettings();
+    // Auto-check on launch silently
+    setTimeout(() => { checkForUpdates(false); }, 3000);
                 alert("Settings reset to defaults.");
             }
         };
@@ -940,7 +1026,93 @@
     };
 
     // Boot
+    
+    // --- In-App Auto Update Checker ---
+    const CURRENT_VERSION = window.Xenon && Xenon.getAppVersion ? Xenon.getAppVersion() : "0.1.0";
+    // Replace with your GitHub user/repo when publishing:
+    const GITHUB_REPO = "LingeshM/XenonAI";
+    const RELEASES_API = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+
+    const elAppVersionDisplay = document.getElementById("appVersionDisplay");
+    const elBtnCheckUpdate = document.getElementById("btnCheckUpdate");
+    const elUpdateStatusMsg = document.getElementById("updateStatusMsg");
+    const elUpdateModal = document.getElementById("updateModal");
+    const elNewVerTag = document.getElementById("newVerTag");
+    const elUpdateChangelog = document.getElementById("updateChangelog");
+    const elBtnDismissUpdate = document.getElementById("btnDismissUpdate");
+    const elBtnDownloadUpdate = document.getElementById("btnDownloadUpdate");
+
+    let pendingDownloadUrl = "";
+
+    if (elAppVersionDisplay) {
+        elAppVersionDisplay.textContent = "v" + CURRENT_VERSION;
+    }
+
+    function compareVersions(v1, v2) {
+        const p1 = v1.replace(/^v/, "").split(".").map(Number);
+        const p2 = v2.replace(/^v/, "").split(".").map(Number);
+        for (let i = 0; i < Math.max(p1.length, p2.length); i++) {
+            const num1 = p1[i] || 0;
+            const num2 = p2[i] || 0;
+            if (num1 > num2) return 1;
+            if (num1 < num2) return -1;
+        }
+        return 0;
+    }
+
+    async function checkForUpdates(manual = false) {
+        if (elUpdateStatusMsg && manual) elUpdateStatusMsg.textContent = "Checking for new releases...";
+        try {
+            const res = await fetch(RELEASES_API, { cache: "no-cache" });
+            if (!res.ok) {
+                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "No update releases found on repository.";
+                return;
+            }
+            const data = await res.json();
+            const latestTag = data.tag_name || "";
+            
+            // If latest version is greater than installed version
+            if (latestTag && compareVersions(latestTag, CURRENT_VERSION) > 0) {
+                // Find .apk asset in release
+                const apkAsset = (data.assets || []).find(a => a.name.endsWith(".apk"));
+                pendingDownloadUrl = apkAsset ? apkAsset.browser_download_url : data.html_url;
+
+                if (elNewVerTag) elNewVerTag.textContent = latestTag;
+                if (elUpdateChangelog) elUpdateChangelog.textContent = data.body || "Performance improvements and bug fixes.";
+                if (elUpdateModal) elUpdateModal.hidden = false;
+                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "";
+            } else {
+                if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "✓ You are on the latest version.";
+            }
+        } catch (err) {
+            if (elUpdateStatusMsg) elUpdateStatusMsg.textContent = "Could not connect to update server.";
+        }
+    }
+
+    if (elBtnCheckUpdate) {
+        elBtnCheckUpdate.onclick = () => checkForUpdates(true);
+    }
+
+    if (elBtnDismissUpdate) {
+        elBtnDismissUpdate.onclick = () => { if (elUpdateModal) elUpdateModal.hidden = true; };
+    }
+
+    if (elBtnDownloadUpdate) {
+        elBtnDownloadUpdate.onclick = () => {
+            if (pendingDownloadUrl) {
+                if (window.Xenon && Xenon.openExternalUrl) {
+                    Xenon.openExternalUrl(pendingDownloadUrl);
+                } else {
+                    window.open(pendingDownloadUrl, "_blank");
+                }
+            }
+            if (elUpdateModal) elUpdateModal.hidden = true;
+        };
+    }
+
     loadSettings();
+    // Auto-check on launch silently
+    setTimeout(() => { checkForUpdates(false); }, 3000);
     loadSessions();
     renderModels();
 })();

@@ -241,6 +241,35 @@ public class MainActivity extends Activity {
 
     public class XenonBridge {
         @JavascriptInterface
+        public String getAppVersion() {
+            try {
+                return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            } catch (Exception e) {
+                return "0.1.0";
+            }
+        }
+
+        @JavascriptInterface
+        public int getAppVersionCode() {
+            try {
+                return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+            } catch (Exception e) {
+                return 100;
+            }
+        }
+
+        @JavascriptInterface
+        public void openExternalUrl(String url) {
+            try {
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+
+        @JavascriptInterface
         public void openFilePicker() {
             Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
