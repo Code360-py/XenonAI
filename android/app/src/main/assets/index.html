@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>XenonAI v0.1.0</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="highlight-dark.css">
+</head>
+<body>
+  <div class="xl-app">
+    <!-- Backdrop Scrim -->
+    <div id="sidebarScrim" class="xl-sidebar-scrim" hidden></div>
+
+    <!-- Sidebar History with Search -->
+    <aside id="sidebar" class="xl-sidebar" hidden>
+      <div class="xl-sidebar-header">
+        <div class="d-flex align-items-center gap-2">
+          <span class="xl-logo-glow"></span>
+          <strong style="font-size: 15px;">Conversations</strong>
+        </div>
+        <button id="btnCloseSidebar" class="xl-history-more-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div style="padding: 10px 10px 4px 10px;">
+        <button id="btnNewChat" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>New Chat</span>
+        </button>
+      </div>
+
+      <div class="xl-search-wrap">
+        <input id="historySearch" type="text" placeholder="Search conversations..." class="xl-search-input">
+      </div>
+
+      <div class="xl-history-list" id="historyList"></div>
+
+      <div style="padding: 12px 14px; border-top: 1px solid var(--border-subtle); background: var(--bg-surface);">
+        <span class="text-muted small">Model: <span id="sidebarModel" style="color: var(--accent-cyan); font-family: var(--font-mono);">None</span></span>
+      </div>
+    </aside>
+
+    <!-- Top Centered Dynamic Island Header -->
+    <header class="xl-top-bar">
+      <div style="width: 32px;"></div>
+
+      <div class="xl-island">
+        <span class="xl-island-dot"></span>
+        <span class="xl-island-title">XenonAI</span>
+        <span id="islandStatus" class="xl-island-status">Ready</span>
+      </div>
+
+      <div style="width: 32px;"></div>
+    </header>
+
+    <!-- Main Viewports -->
+    <main class="xl-view-container">
+      <!-- 1. Chat Tab -->
+      <section id="view-chat" class="xl-view active">
+        <div id="messages" class="xl-chat-messages">
+          <div class="xl-welcome">
+            <div class="xl-badges-container">
+              <span class="xl-welcome-badge brand">XenonAI</span>
+              <span class="xl-welcome-badge edge">Edge Intelligence</span>
+              <span class="xl-welcome-badge secure">100% Offline / Private</span>
+            </div>
+            <h3>How can I assist you today?</h3>
+            <p>Running high-performance offline inference locally on mobile silicon via llama.cpp.</p>
+          </div>
+        </div>
+
+        <div class="xl-composer-wrapper">
+          <form id="composer" class="xl-composer">
+            <button type="button" id="btnInputMenu" class="xl-input-icon-btn" title="Open Conversation History">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+
+            <input id="prompt" class="xl-composer-input" type="text" placeholder="Ask XenonAI..." autocomplete="off">
+
+            <button id="sendBtn" class="xl-send-btn" type="submit" title="Send message"></button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 2. Models Tab -->
+      <section id="view-models" class="xl-view">
+        <div class="xl-scroll-content">
+          <div class="xl-model-card" style="border-style: dashed; background: rgba(37, 99, 235, 0.04); margin-bottom: 12px;">
+            <div class="xl-model-header">
+              <div>
+                <div class="xl-model-title">Custom GGUF Model</div>
+                <div class="text-muted" style="margin-top: 3px;">Load any quant from internal storage or SD card</div>
+              </div>
+            </div>
+            <button id="btnBrowse" class="btn btn-secondary w-100">
+              📁 Browse Local File
+            </button>
+          </div>
+
+          <div class="xl-search-wrap" style="padding: 0 0 8px 0;">
+            <input id="modelSearch" type="text" placeholder="Search models by name or tag..." class="xl-search-input">
+          </div>
+
+          <div class="xl-category-bar">
+            <button class="xl-cat-chip active" data-category="general">General</button>
+            <button class="xl-cat-chip" data-category="reasoning">Reasoning</button>
+            <button class="xl-cat-chip" data-category="coding">Coding</button>
+            <button class="xl-cat-chip" data-category="unfiltered">Unfiltered</button>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center" style="margin: 12px 2px 10px 2px;">
+            <span id="categoryLabel" style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">General Models</span>
+            <span id="activeModelTag" class="xl-pill highlight">Active: None</span>
+          </div>
+
+          <div id="modelList"></div>
+        </div>
+      </section>
+
+      <!-- 3. Settings Tab -->
+      <section id="view-settings" class="xl-view">
+        <div class="xl-scroll-content">
+          
+          <!-- Inference Presets -->
+          <div class="xl-settings-group">
+            <div class="xl-settings-group-title">Inference Presets</div>
+            <div class="xl-presets-grid">
+              <button type="button" class="xl-preset-btn" id="presetFast">
+                <strong>Fast / Edge</strong>
+                <small>Low temp, 128 tok</small>
+              </button>
+              <button type="button" class="xl-preset-btn active" id="presetBalanced">
+                <strong>Balanced</strong>
+                <small>0.7 temp, 256 tok</small>
+              </button>
+              <button type="button" class="xl-preset-btn" id="presetCreative">
+                <strong>Creative</strong>
+                <small>0.9 temp, 512 tok</small>
+              </button>
+              <button type="button" class="xl-preset-btn" id="presetCoding">
+                <strong>Coding</strong>
+                <small>0.2 temp, greedy</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Theme Setup (Dark / Light / System) -->
+          <div class="xl-settings-group">
+            <div class="xl-settings-group-title">Theme Setup</div>
+            <div class="xl-theme-selector">
+              <button type="button" class="xl-theme-btn active" data-theme="dark">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <span>Dark</span>
+              </button>
+              <button type="button" class="xl-theme-btn" data-theme="light">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <span>Light</span>
+              </button>
+              <button type="button" class="xl-theme-btn" data-theme="system">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                <span>System</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Feature & Rendering Switches -->
+          <div class="xl-settings-group">
+            <div class="xl-settings-group-title">Rendering & Engine Toggles</div>
+
+            <div class="xl-toggle-row">
+              <div class="xl-toggle-info">
+                <span class="xl-toggle-label">Markdown Parser</span>
+                <span class="xl-toggle-sub">Format lists, tables, and bold typography</span>
+              </div>
+              <label class="xl-switch">
+                <input type="checkbox" id="switchMarkdown" checked>
+                <span class="xl-switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="xl-toggle-row">
+              <div class="xl-toggle-info">
+                <span class="xl-toggle-label">Syntax Highlighting</span>
+                <span class="xl-toggle-sub">Colorize code blocks with highlight.js</span>
+              </div>
+              <label class="xl-switch">
+                <input type="checkbox" id="switchHighlight" checked>
+                <span class="xl-switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="xl-toggle-row">
+              <div class="xl-toggle-info">
+                <span class="xl-toggle-label">Save Chat History</span>
+                <span class="xl-toggle-sub">Persist conversation logs to local storage</span>
+              </div>
+              <label class="xl-switch">
+                <input type="checkbox" id="switchHistory" checked>
+                <span class="xl-switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="xl-toggle-row" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+              <div class="xl-toggle-info">
+                <span class="xl-toggle-label">Haptic Feedback</span>
+                <span class="xl-toggle-sub">Subtle vibration when response generation finishes</span>
+              </div>
+              <label class="xl-switch">
+                <input type="checkbox" id="switchHaptic">
+                <span class="xl-switch-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Hardware & Engine Group -->
+          <div class="xl-settings-group">
+            <div class="xl-settings-group-title">Hardware & Engine</div>
+
+            <div class="xl-param-row">
+              <div class="xl-param-header">
+                <span>CPU Threads</span>
+                <span id="oThreads" class="xl-param-val">4</span>
+              </div>
+              <input id="sThreads" type="range" min="1" max="8" step="1" value="4">
+            </div>
+
+            <div class="xl-param-row">
+              <div class="xl-param-header">
+                <span>Context Window (Tokens)</span>
+                <span id="oCtx" class="xl-param-val">512</span>
+              </div>
+              <input id="sCtx" type="range" min="512" max="4096" step="512" value="512">
+            </div>
+          </div>
+
+          <!-- Sampler Parameters -->
+          <div class="xl-settings-group">
+            <div class="xl-settings-group-title">Sampling Parameters</div>
+
+            <div class="xl-param-row">
+              <div class="xl-param-header">
+                <span>Max Tokens</span>
+                <span id="oMax" class="xl-param-val">256</span>
+              </div>
+              <input id="sMax" type="range" min="32" max="1024" step="32" value="256">
+            </div>
+
+            <div class="xl-param-row">
+              <div class="xl-param-header">
+                <span>Temperature</span>
+                <span id="oTemp" class="xl-param-val">0.70</span>
+              </div>
+              <input id="sTemp" type="range" min="0" max="150" step="5" value="70">
+            </div>
+
+            <div class="xl-param-row">
+              <div class="xl-param-header">
+                <span>Top P</span>
+                <span id="oTopP" class="xl-param-val">0.95</span>
+              </div>
+              <input id="sTopP" type="range" min="10" max="100" step="5" value="95">
+            </div>
+
+            <div class="xl-param-row">
+              <div class="xl-param-header">
+                <span>Top K</span>
+                <span id="oTopK" class="xl-param-val">40</span>
+              </div>
+              <input id="sTopK" type="range" min="1" max="100" step="1" value="40">
+            </div>
+
+            <div class="xl-param-row">
+              <div class="xl-param-header">
+                <span>Repeat Penalty</span>
+                <span id="oRep" class="xl-param-val">1.10</span>
+              </div>
+              <input id="sRep" type="range" min="100" max="130" step="2" value="110">
+            </div>
+          </div>
+
+          <!-- Persona -->
+          <div class="xl-settings-group">
+            <div class="xl-settings-group-title">System Prompt</div>
+            <textarea id="sSystem" rows="3" class="form-control" placeholder="Define model behavior..."></textarea>
+          </div>
+
+          <!-- Maintenance Actions -->
+          <div class="xl-settings-group">
+            <div class="xl-settings-group-title">Maintenance & Diagnostics</div>
+            <button id="btnClearAppCache" type="button" class="btn btn-secondary w-100" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+              Clear Memory Cache & Local Logs
+            </button>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 mt-3">
+            <button id="save" class="btn btn-primary w-100">Save Configuration</button>
+          </div>
+          <div id="savedMsg" style="text-align: center; color: var(--accent-emerald); font-size: 12px; margin-top: 8px;"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="xl-bottom-nav">
+      <button class="xl-nav-tab active" data-tab="chat">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>Chat</span>
+      </button>
+
+      <button class="xl-nav-tab" data-tab="models">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+        <span>Models</span>
+      </button>
+
+      <button class="xl-nav-tab" data-tab="settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="marked.min.js"></script>
+  <script src="highlight.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
